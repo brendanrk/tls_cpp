@@ -5,8 +5,10 @@
 #include <unistd.h>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 
 #define MAXLINE 1024
+#define BUFSIZE 1024
 
 int main() {
     SSL_CTX *ctx;
@@ -72,25 +74,28 @@ int main() {
             continue;
         }
 
-        // Receive data
-        int n = SSL_read(ssl, buf, MAXLINE);
-        if (n <= 0) {
-            ERR_print_errors_fp(stderr);
+        // Read incoming data
+        char buf[BUFSIZE];
+        int len;
+        std::stringstream ss;
+
+        while ((len = SSL_read(ssl, buf, BUFSIZE)) > 0) {
+            ss.write(buf, len);
+        }
+
+        if (len < 0) {
+            std::cerr << "Error reading data" << std::endl;
             SSL_shutdown(ssl);
-            SSL_free(ssl);
             close(connfd);
             continue;
         }
 
-        // Print request
-        std::cout << "Received request:\n";
-        std::cout.write(buf, n);
-        std::cout << std::endl;
-
+        // Send response
         // Send response
         char response[] = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 12\r\n\r\nHello, world!";
         SSL_write(ssl, response, strlen(response));
 
+     
         // Clean up SSL connection
         SSL_shutdown(ssl);
         SSL_free(ssl);

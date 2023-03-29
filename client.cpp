@@ -65,11 +65,34 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Send HTTP request
-    char request[] = "GET / HTTP/1.1\r\nHost: ";
-    strncat(request, argv[1], MAXLINE - strlen(request) - 3);
-    strncat(request, "\r\n\r\n", MAXLINE - strlen(request) - 1);
-    SSL_write(ssl, request, strlen(request));
+
+
+    // Keep the connection open and send NUM_PAYLOADS payloads
+    for (int i = 0; i < 3; ++i) {
+        std::cout << "Sending payload #" << i + 1 << std::endl;
+
+        // Send HTTP request
+        char request[] = "GET / HTTP/1.1\r\nHost: ";
+        strncat(request, argv[1], MAXLINE - strlen(request) - 3);
+        strncat(request, "\r\n\r\n", MAXLINE - strlen(request) - 1);
+        // SSL_write(ssl, request, strlen(request));
+
+        int bytes_sent = SSL_write(ssl, request, strlen(request));
+        if (bytes_sent <= 0) {
+            std::cerr << "Failed to send payload" << std::endl;
+            break;
+        }
+
+        std::cout << "Sent " << bytes_sent << " bytes" << std::endl;
+
+        // Sleep for 5 seconds before sending the next payload
+        std::cout << "Sleeping for 5 seconds" << std::endl;
+        sleep(1);
+    }
+
+    char data[1] = {0}; // buffer with size 0
+    SSL_write(ssl, data, 0);
+    sleep(1);
 
     // Receive response
     int n = SSL_read(ssl, buf, MAXLINE);
