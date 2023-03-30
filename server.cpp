@@ -75,25 +75,22 @@ int main() {
         }
 
         // Read incoming data
-        char buf[BUFSIZE];
+        // char buf[BUFSIZE];
         int len;
         std::stringstream ss;
 
         while ((len = SSL_read(ssl, buf, BUFSIZE)) > 0) {
+            std::cout << "Read " << len << " bytes from SSL connection:\n";
+            std::cout << std::string(buf, len) << std::endl;
+
             ss.write(buf, len);
         }
 
-        if (len < 0) {
-            std::cerr << "Error reading data" << std::endl;
-            SSL_shutdown(ssl);
-            close(connfd);
-            continue;
-        }
 
         // Send response
         // Send response
-        char response[] = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 12\r\n\r\nHello, world!";
-        SSL_write(ssl, response, strlen(response));
+        // char response[] = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 12\r\n\r\nHello, world!";
+        // SSL_write(ssl, response, strlen(response));
 
      
         // Clean up SSL connection
